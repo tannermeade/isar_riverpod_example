@@ -89,7 +89,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             var asyncData = ref.watch(profileProvider);
             return asyncData.when(
               data: (profile) => Text(profile.name),
-              error: (error, stackTrace) => Text(error.toString()),
+              error: (error, stackTrace) => const SizedBox(),
               loading: () => const CircularProgressIndicator.adaptive(),
             );
           },
