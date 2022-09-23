@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:isar_riverpod_example/riverpod/providers.dart';
 import 'notifier_id.dart';
+import 'objects_in_memory_observer.dart';
 
 typedef ObjectProvider<A, B> = AutoDisposeStateNotifierProvider<ObjectNotifier<A, B>, AsyncValue<A>>;
 typedef ObjectProviderFamily<A, B>
@@ -24,13 +25,16 @@ abstract class ObjectNotifier<T, I> extends StateNotifier<AsyncValue<T>> {
   StreamSubscription<T?>? onChangeSubscription;
 
   @protected
-  Future<T?> getByIdentifierQuery(I identifier);
+  Future<Query<T>> buildQueryGetByIdentifier(I identifier);
 
   @protected
   Stream<T?> watchByIsarId(Isar isar, Id isarId);
 
   @protected
   Id getIsarId(T obj);
+
+  static ObjectProvider<A, B> providerFromIdentifier<A, B>(B identifier, ObjectProviderFamily<A, B> provider) =>
+      provider(ObjectNotifierId<A, B>(identifier));
 
   void _init() async {
     if (objectNotifierId.dataFuture != null && objectNotifierId.dataFuture is Future<T?>) {
@@ -40,7 +44,8 @@ abstract class ObjectNotifier<T, I> extends StateNotifier<AsyncValue<T>> {
         await _watch(getIsarId(data));
       }
     } else {
-      var retrievedObj = await getByIdentifierQuery(objectNotifierId.identifier);
+      var query = await buildQueryGetByIdentifier(objectNotifierId.identifier);
+      var retrievedObj = await query.findFirst();
       if (retrievedObj != null) {
         if (mounted) state = AsyncLoading<T>().copyWithPrevious(AsyncData(retrievedObj));
         await _watch(getIsarId(retrievedObj));
@@ -74,19 +79,32 @@ abstract class ObjectNotifier<T, I> extends StateNotifier<AsyncValue<T>> {
   void onChangedDone() {}
 
   static List<ObjectProvider<A, B>> providersFromIdentifiers<A, B>({
+    required Reader read,
     required List<B> identifiers,
     required Future<List<A>> Function(List<B> identifiers) getAllByIdentifierQuery,
     required bool Function(A obj, B otherIdentifier) identifierEqualToComparator,
     required ObjectProviderFamily<A, B> getProvider,
   }) {
-    var getAllObjsFuture = getAllByIdentifierQuery(identifiers);
-    return identifiers.map((identifier) {
-      Future<A?> future = Future(() async {
-        var objs = await getAllObjsFuture;
-        return objs.firstWhereOrNull((el) => identifierEqualToComparator(el, identifier));
-      });
-      return getProvider(ObjectNotifierId<A, B>(identifier, future));
-    }).toList();
+    var memoryObserver = read(ObjectsInMemoryObserver.provider);
+    List<B> loadedIdentifiers = [];
+    List<B> notLoadedIdentifiers = [];
+    for (B identifier in identifiers) {
+      if (memoryObserver.isObjectInMemory(A, identifier)) {
+        loadedIdentifiers.add(identifier);
+      } else {
+        notLoadedIdentifiers.add(identifier);
+      }
+    }
+
+    var getAllObjsFuture = getAllByIdentifierQuery(notLoadedIdentifiers);
+
+    var loadedProviders = loadedIdentifiers.map((identifier) => getProvider(ObjectNotifierId<A, B>(identifier)));
+    var notLoadedProviders = notLoadedIdentifiers.map((identifier) => getProvider(ObjectNotifierId<A, B>(
+        identifier,
+        Future(() async =>
+            (await getAllObjsFuture).firstWhereOrNull((el) => identifierEqualToComparator(el, identifier))))));
+
+    return [...loadedProviders, ...notLoadedProviders];
   }
 
   static List<ObjectProvider<A, B>> providersFromObjects<A, B>({

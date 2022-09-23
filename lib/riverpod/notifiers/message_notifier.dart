@@ -56,9 +56,13 @@ class MessageNotifier extends ObjectNotifier<Message, Id> {
             providersFromObjects: providersFromObjects,
           ));
 
+  static ObjectProvider<Message, Id> providerFromIdentifier(Id identifier) =>
+      ObjectNotifier.providerFromIdentifier<Message, Id>(identifier, provider);
+
   static List<ObjectProvider<Message, Id>> providersFromIdentifiers(
           {required List<Id> identifiers, required Reader read}) =>
       ObjectNotifier.providersFromIdentifiers<Message, Id>(
+        read: read,
         identifiers: identifiers,
         getAllByIdentifierQuery: (List<Id> identifiers) async {
           var isar = await read(isarProvider.future);
@@ -76,9 +80,9 @@ class MessageNotifier extends ObjectNotifier<Message, Id> {
   MessageNotifier(super.read, super.notifierId);
 
   @override
-  Future<Message?> getByIdentifierQuery(Id identifier) async {
+  Future<Query<Message>> buildQueryGetByIdentifier(Id identifier) async {
     var isar = await read(isarProvider.future);
-    return await _collection(isar).where().idEqualTo(identifier).findFirst();
+    return _collection(isar).where().idEqualTo(identifier).build();
   }
 
   @override

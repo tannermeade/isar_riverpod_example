@@ -87,7 +87,7 @@ class ListNotifier<A, B> extends StateNotifier<AsyncValue<List<ObjectProvider<A,
       identifiers ??= [];
       identifiers!.addAll(newIdentifiers);
       List<ObjectProvider<A, B>> newProviders = providersFromObjects(objects: newObjects, read: read);
-      if (mounted) state = AsyncData((state.value ?? []) + newProviders);
+      state = AsyncData((state.value ?? []) + newProviders);
 
       await _watch();
     }

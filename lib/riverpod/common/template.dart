@@ -1,7 +1,8 @@
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:isar/isar.dart';
-// import 'package:isar_riverpod_example/riverpod/common/list_notifier.dart';
-// import 'package:isar_riverpod_example/riverpod/common/obj_notifier.dart';
+
+// import '../common/list_notifier.dart';
+// import '../common/obj_notifier.dart';
 
 // class TemplateNotifier extends ObjectNotifier<Template, String> {
 //   static IsarCollection<Template> _collection(Isar isar) => isar.templates;
@@ -45,9 +46,13 @@
 //             providersFromObjects: providersFromObjects,
 //           ));
 
+//   static ObjectProvider<Template, String> providerFromIdentifier(String identifier) =>
+//       ObjectNotifier.providerFromIdentifier<Template, String>(identifier, provider);
+
 //   static List<ObjectProvider<Template, String>> providersFromIdentifiers(
 //           {required List<String> identifiers, required Reader read}) =>
 //       ObjectNotifier.providersFromIdentifiers<Template, String>(
+//         read: read,
 //         identifiers: identifiers,
 //         getAllByIdentifierQuery: (List<String> identifiers) async {
 //           var repo = await read(repositoryPod.future);
@@ -65,9 +70,9 @@
 //   TemplateNotifier(super.read, super.notifierId);
 
 //   @override
-//   Future<Template?> getByIdentifierQuery(String identifier) async {
-//     var repo = await read(repositoryPod.future);
-//     return await _collection(repo.isar).where().idEqualTo(identifier).findFirst();
+//   Future<Query<Template>> buildQueryGetByIdentifier(String identifier) async {
+//     var isar = await read(isarPod.future);
+//     return _collection(isar).where().idEqualTo(identifier).build();
 //   }
 
 //   @override

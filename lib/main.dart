@@ -5,12 +5,20 @@ import 'package:isar_riverpod_example/isar/collection/message.dart';
 import 'package:isar_riverpod_example/isar/collection/profile.dart';
 import 'package:isar_riverpod_example/riverpod/common/list_notifier.dart';
 import 'package:isar_riverpod_example/riverpod/common/obj_notifier.dart';
+import 'package:isar_riverpod_example/riverpod/common/objects_in_memory_observer.dart';
 import 'package:isar_riverpod_example/riverpod/notifiers/message_notifier.dart';
 import 'package:isar_riverpod_example/riverpod/notifiers/profile_notifier.dart';
 import 'package:isar_riverpod_example/riverpod/providers.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ProviderScope(
+    child: Consumer(
+      builder: (context, ref, child) => ProviderScope(
+        observers: [ref.read(ObjectsInMemoryObserver.provider)],
+        child: const MyApp(),
+      ),
+    ),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -18,12 +26,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData.dark(),
-        home: const QuadrupleChatPage(),
-      ),
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData.dark(),
+      home: const QuadrupleChatPage(),
     );
   }
 }
@@ -74,7 +80,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   void initState() {
-    profileProvider = ProfileNotifier.getFromId(widget.profileId);
+    profileProvider = ProfileNotifier.providerFromIdentifier(widget.profileId);
     messagesProvider = MessageNotifier.getAll();
     profilesProvider = ProfileNotifier.getAllExcept(widget.profileId);
     super.initState();
@@ -175,7 +181,7 @@ class MessageWidget extends StatelessWidget {
                 child: Text(msg.content),
               ),
               Consumer(builder: (context, ref, child) {
-                var asyncProfile = ref.watch(ProfileNotifier.getFromId(msg.fromProfileId));
+                var asyncProfile = ref.watch(ProfileNotifier.providerFromIdentifier(msg.fromProfileId));
                 return asyncProfile.when(
                   data: (profile) => Text(
                     "From:${profile.name}",

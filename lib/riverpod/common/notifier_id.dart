@@ -8,6 +8,8 @@ class ObjectNotifierId<T, I> {
   Future<T?>? get dataFuture => _dataFuture;
   I get identifier => _identifier;
 
+  Type get dataType => T;
+
   @override
   bool operator ==(Object other) =>
       (other is ObjectNotifierId && other._identifier == _identifier) || (other is String && other == _identifier);

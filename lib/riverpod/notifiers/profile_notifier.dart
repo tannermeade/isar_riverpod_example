@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:isar_riverpod_example/isar/collection/profile.dart';
-import 'package:isar_riverpod_example/riverpod/common/notifier_id.dart';
 import 'package:isar_riverpod_example/riverpod/providers.dart';
 
 import '../common/list_notifier.dart';
@@ -13,8 +12,6 @@ class ProfileNotifier extends ObjectNotifier<Profile, Id> {
   static final provider = ObjectProviderFamily<Profile, Id>(
     (ref, notifierId) => ProfileNotifier(ref.read, notifierId),
   );
-
-  static ObjectProvider<Profile, Id> getFromId(Id profileId) => provider(ObjectNotifierId<Profile, int>(profileId));
 
   static ListProvider<Profile, Id> getAllExcept(Id exceptId) => _queryProviderFamily(
         getAllObjects: (ref) async {
@@ -59,9 +56,13 @@ class ProfileNotifier extends ObjectNotifier<Profile, Id> {
             providersFromObjects: providersFromObjects,
           ));
 
+  static ObjectProvider<Profile, Id> providerFromIdentifier(Id identifier) =>
+      ObjectNotifier.providerFromIdentifier<Profile, Id>(identifier, provider);
+
   static List<ObjectProvider<Profile, Id>> providersFromIdentifiers(
           {required List<Id> identifiers, required Reader read}) =>
       ObjectNotifier.providersFromIdentifiers<Profile, Id>(
+        read: read,
         identifiers: identifiers,
         getAllByIdentifierQuery: (List<Id> identifiers) async {
           var isar = await read(isarProvider.future);
@@ -79,9 +80,9 @@ class ProfileNotifier extends ObjectNotifier<Profile, Id> {
   ProfileNotifier(super.read, super.notifierId);
 
   @override
-  Future<Profile?> getByIdentifierQuery(Id identifier) async {
+  Future<Query<Profile>> buildQueryGetByIdentifier(Id identifier) async {
     var isar = await read(isarProvider.future);
-    return await _collection(isar).where().idEqualTo(identifier).findFirst();
+    return _collection(isar).where().idEqualTo(identifier).build();
   }
 
   @override
