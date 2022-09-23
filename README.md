@@ -19,7 +19,7 @@ The brains of the state system is in `lib/riverpod/common`. The two basic ideas 
 - ListNotifier: Handles a list's state and subscribes to create events
 
 ### Other concepts
-- ObjectsInMemoryObserver: Observers the ProviderScope and listens to create & dispose events for providers. It uses these event to keep track of which objects are loaded in memory, and which are not.
+- `ObjectsInMemoryObserver`: Observers the ProviderScope and listens to create & dispose events for providers. It uses these event to keep track of which objects are loaded in memory, and which are not.
 - The code uses generics to model both the object type and the identifier type. The identifier is most often the Id of the object. Just in case the user wants to use a different data type to uniquely identify an object (just as a string) it can be changed easily. The `ObjectNotifierId` class is used to identify an object's provider. It holds the identifier of the object and is internally used to initialize a provider when it is more efficient to query multiple objects at once. It is also used to keep track of which objects are loaded into memory (so we don't query for objects that are already loaded and we know the identifier for).
 
 The CRUD state events that take place are:
