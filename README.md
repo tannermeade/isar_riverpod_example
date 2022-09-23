@@ -1,6 +1,6 @@
 # isar_riverpod_example
 
-This is an example of using Isar and Riverpod together.
+This is an example of using Isar and Riverpod together. It creates 4 chat pages and has a message button to create a message from the different people. It's a very basic example for a system designed for very complex state management.
 
 ## Motivations
 
